@@ -126,7 +126,8 @@ http.createServer(function(request,response) {
 
 ###Eventos que son lanzados:
     -newListener: Se lanza cada vez que un listener es añadido. Devuelve nombre del event y la función listener. El evento es lanzado antes que el listener es añadido al event. Eso hace que podamos añadir otro listener antes que dicho event con once(basado en el código anterior):
-        '''
+
+'''
         //Lanzado una vez cuando un evento es enviado(con on o addListener, no es lo mismo que emit)
         eventsEmitter.once("newListener", function(event, listenr){
             //Vamos a añadir un nuevo listener al evento myEvent
@@ -147,7 +148,7 @@ http.createServer(function(request,response) {
             //myEvents anteriormente es añadido antes que este listener
            console.log("Apareceré más abajo");
         });
-        '''
+'''
         
         eventEmmiter.emit("myEvent");
     -removeListener: Evento que se lanza cada vez que se elimina un listener. Devuelve event(string) y listener(func).
