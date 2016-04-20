@@ -1,32 +1,37 @@
-Iniciar un servidor básico:
-//en server.js
+BASIC NOTES ON NODE.JS / SPANGLISH
+***
+
+#01 Basic: Iniciar un servidor básico:
+
+'''
+//en basic.js
 //Required modules.
 var http = require("http");
 
-//Creating an HTTP the server that listens to the port 8081
-http.createServer(function (request,response){
-    //Request is the data sent to the server
-    //Response is the data sent from the server to the client
-    //Respondemos enviando un header con el status(200, todo correccto)
-    //y el tipo de archivo
-    response.writeHead(200, {"Content-type":"text/plain"});
+    //Creating an HTTP the server that listens to the port 8081
+    http.createServer(function (request,response){
+        //Request is the data sent to the server
+        //Response is the data sent from the server to the client
+        //Respondemos enviando un header con el status(200, todo correccto)
+        //y el tipo de archivo
+        response.writeHead(200, {"Content-type":"text/plain"});
 
-    //Escribir un Hello world a todas las páginas que aparecen y 
-    //cerrar la respuesta al cliente
-    response.end("Hello world :)");
-
-}).listen(8081);
+        //Escribir un Hello world a todas las páginas que aparecen y 
+        //cerrar la respuesta al cliente
+        response.end("Hello world :)");
+    }).listen(8081);
 
 //Notificación que se envia a la consola del servidor y no a la del cliente
 console.log("Servidor creado");
+'''
 
+'''
 //En terminal
 node server.js
+'''
 
-___
-
-Iniciar un paquete en npm
-
+#02 Basic Modules: Iniciar un paquete en npm
+'''
 //en terminal
 npm init
 
@@ -38,11 +43,13 @@ npm adduser
 
 //Publicar al repositiorio de modulos de npm. Si no va, comprobar que el nombre no está usado
 npm publish
+'''
 
-____
 
-Reading a file async
+# 03 ReadFile: Reading a file async
 
+'''
+//en readFileTut.js
 //To create a server if needed
 var http = require("http");
 
@@ -59,11 +66,13 @@ fs.readFile("index.txt", function(err, data){
 
 //ProgramEnded
 console.log("Finished!");
+'''
 
-___
 
-Events! Node is an event driven language. We build multiple observers for different kinds of events and when one is emmited, the function adhered to the oberved is called. Events can be a client connection, a get request, a change in a state, etc. Node has also the ability to create its own events and fire them at please. For that it uses the events module:
+#04 Events
+Node is an event driven language. We build multiple observers for different kinds of events and when one is emmited, the function adhered to the oberved is called. Events can be a client connection, a get request, a change in a state, etc. Node has also the ability to create its own events and fire them at please. For that it uses the events module:
 
+'''
 //In a file
 //Require events, in-build with node, no need to install
 var events = require("events");
@@ -101,9 +110,9 @@ http.createServer(function(request,response) {
     //Fire the "connection" event
     eventEmitter.emit("connection");
 });
+'''
 
-___
-EventEmitter methods:
+###EventEmitter methods:
     -addListener(event, listener): es igual que on(event, listener). Tanto on como addListener devuelven el eventEmitter por lo que se pueden encadenar varios a la vez; Lanza el newListener event
     -on(event, listenr): Igual que addListener
     -once(event, listener): El listener es ejecutado solo la primera vez que el event es fired. Tras ello es removido. Devuelve emitter
@@ -112,12 +121,12 @@ EventEmitter methods:
     -listeners(event): devuelve lista de listeners para un elemento dado
     -emit(event, [arg1], [arg2], ...): Lanza un elemento con argumentos opcionales. Devuelve true si el evento tenía listers y falso en cao contrario.
 
-Funciones que aceptan eventEmitters:
+###Funciones que aceptan eventEmitters:
     -listenerCount(emmiter, event): devuelve el número de listeners para un evento dado. No recomendado. Mejor 
 
-Eventos que son lanzados:
+###Eventos que son lanzados:
     -newListener: Se lanza cada vez que un listener es añadido. Devuelve nombre del event y la función listener. El evento es lanzado antes que el listener es añadido al event. Eso hace que podamos añadir otro listener antes que dicho event con once(basado en el código anterior):
-        
+        '''
         //Lanzado una vez cuando un evento es enviado(con on o addListener, no es lo mismo que emit)
         eventsEmitter.once("newListener", function(event, listenr){
             //Vamos a añadir un nuevo listener al evento myEvent
@@ -138,6 +147,7 @@ Eventos que son lanzados:
             //myEvents anteriormente es añadido antes que este listener
            console.log("Apareceré más abajo");
         });
+        '''
         
         eventEmmiter.emit("myEvent");
     -removeListener: Evento que se lanza cada vez que se elimina un listener. Devuelve event(string) y listener(func).
