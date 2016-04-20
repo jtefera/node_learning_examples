@@ -1,0 +1,16 @@
+{
+  "name": "testingthetest",
+  "version": "1.0.0",
+  "description": "Understanding Node and NPM modules",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Node",
+    "Npm",
+    "Test"
+  ],
+  "author": "Jonathan Tefera",
+  "license": "MIT"
+}
