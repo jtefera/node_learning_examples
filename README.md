@@ -786,4 +786,325 @@ fs.unwatchFile(filename[, listener])
 fs.exists(path, callback)
 ```
 
-Más en este [enlace](http://www.tutorialspoint.com/nodejs/nodejs_file_system.htm)
+Más en este [enlace](http://www.tutorialspoint.com/nodejs/nodejs_file_system.htm) 
+
+#07 Objetos globales
+Se denominan objetos globales a aquellos que se puede acceder en todos los módulos y archivos sin que hayan sido instanciados. NodeJs los crea.
+Algunos son:
+
+#### __filename
+Nos devuelve el absolute path del archivo llamado
+```
+//Filename and dirname
+//__filename: devuelve el path completo del archivo llamado
+    // D:\Nuevo\Dropbox\WebDesign\node\07_globals\filename.js
+console.log( __filename ); 
+```
+
+####__dirname
+```
+// __dirname: devuelve el path del directorio que contiene al archivo llamado
+    //D:\Nuevo\Dropbox\WebDesign\node\07_global
+console.log( __dirname );
+```
+
+####Timers
+Los ya conocidos:
+```
+//Llama a callback despues de t_ms milisegundos
+var timer = setTimeout(callback, t_ms); 
+//Elimina un setTimeout si aún no se ha ejecutado
+clearTimeout(timer);
+//Llama a callback cada t_ms milisegundos
+var interval = setInterval(callback, t_ms); 
+```
+
+##Process
+El objeto global que contiene datos del proceso de node.
+Es un objeto eventEmmiter
+####Emite los siguientes eventos:
+````
+exit: Cuando  se cierra el proceso. No se puede parar. Da un argumento de exit code al callback.
+        Dicho código nos dice si ha habido errores, etc.
+beforeExit: Se lanza cuando no hay mas eventos en el event Loop y va a proceder a exit.
+        Se le pueden añadir más llamadas asincronas aumentando el event loop y retrasando la salida
+uncaughtException: Cuando salta un error y no se ha parado. Dicho error aparece en la consola
+        pero con este evento se puede frenar
+Otros: sigint, sighup    
+
+````
+
+####Metodos y propiedades:
+````
+argv: Devuelve un array con los argumentos que se le pasa a la llamada del script
+        //node scr.js Hola Adios
+            process.argv contiene a hola y adios
+    Muchos más
+````
+
+08 HTTP Server
+```
+//httpserver.js
+//Vamos a crear un server sencllo que devulve los archivos 
+//que se buscan si existen y si no un 404
+
+//Paara el server necesitamos HTTP, para la lectura de archivos fs
+//url para tratar archivos
+var http = require("http");
+var fs = require("fs");
+var url = require("url");
+
+//Connection POrt
+var portNumber = 8081;
+
+//Called when a file is found. Return the html file
+function readHTMLfile(pathname, res) {
+    fs.readFile(pathname, function(err, data){
+        if(err){
+            return console.log("Error reading the file: ", err);
+        }
+        res.writeHead(200, {"Content-type":"text/html"});
+        res.end(data.toString());
+        console.log("Todo listo!");
+    });
+}
+
+//Called when no file is found for a given pathname
+function return404(res){
+    //404 page
+    res.writeHead(404, {"Content-type":"text/html"});
+    res.end("We are Sorry but we could find the page you are searching");
+}
+
+//Creating HTTP server
+http.createServer(function(req, res) {
+    //Conection done!
+    console.log("User connected.");
+    //req.url= localhost:8081/pathname
+    //url.pathname = /pathname
+    //Solo queremos pathname
+    var urlSearched = url.parse(req.url).pathname.substring(1) || "./";
+    //Searching that file:
+    //Check if is file or folder:
+    try{
+        var statInfo = fs.statSync(urlSearched);
+        if(statInfo.isDirectory()){
+            //Case pathname points to a directory
+            //In that case the default files to read
+            //are index.htm or index.html
+            var indexPath = urlSearched + "index.htm";
+            try{
+                //Check if there is a index.htm in the directory
+                var indexStatInfo = fs.statSync(indexPath);
+                //If no error, there is a index.htm
+                //Return that file
+                readHTMLfile(indexPath, res);
+            } catch(err){
+                //There is no index.htm in the directory.
+                //Try with index.html
+                indexPath += "l";
+                try{
+                    //Check if there is a index.html in that directory
+                    var indexStatInfo = fs.statSync(indexPath);
+                    //If no error, there is a index.html file
+                    //Return that file
+                    readHTMLfile(indexPath, res);
+
+                } catch(err) {
+                    console.log("There is no index.htm nor" 
+                                + "index.html in the directory "
+                                + urlSearched, err);
+                    //Give an 404 Error
+                    return404(res);
+                }
+            }
+        } else if(statInfo.isFile()){
+            //Case the url points to a file
+            //Return that file
+            readHTMLfile(urlSearched, res);
+        } else {
+            //In the strange case that the path points to something
+            //but it is not a directory or a file ¿?
+            //Return 404
+            return404(res);
+        }
+    } catch(err){
+        if(err.code === "ENOENT"){
+            //ENOENT is the code for non found file or directory
+            console.log("The path './" + urlSearched 
+                        + "' doesn't point to a file nor to a directory");
+        } else {
+            //Other Errors
+            console.log(err);
+        }
+        //Return the 404 Page
+        return404(res);
+    }
+}).listen(portNumber);
+```
+
+
+#09 Express!
+
+###Middleware
+Toda función que es invocada por la capa de enrutamiento de Express.js antes de hacer el final request.
+
+Eso significa que cuando el cliente hace un request, Express.js tiene distintas función que van atrapando dicho requesto en cierto orden. Una vez que han finalizado su llamada, pasan la request al siguiente middleware hasta llegar al final
+
+Ejemplo de ello:
+    * El cliente hace un request para acceder a dicha página  
+    * Express toma dicho request y lo pasa por el primer middleware que hayamos especificado: Ej: Comprobación de CORS(Cross-Origin Resource Sharing) para comprobar si se cumplen las reglas  
+    * Tras ello, pueden pasar al siguiente middleware que puede ser de autentificación para comprobar que el cliente está autorizado para acceder a la pagina requerida  
+    * Y por últimpo, por ejemplo, sería devolver la página correcta al cliente
+
+Un ejemplo de ello sería:
+````
+app.post(pathname, autFunc(), finalMiddle)
+````
+Donde:
+* app.post es un enrutamiento de Express que capta todos los post requests enviados a pathname
+* autFunc() es un middleware de autentificación que en este caso puede que se haya creado para dejar pasar solo a los usuarios autentificados. Dentro de autFunc() hay una llamada a la función next() que lo que hacé es que si todo ha ido bien, pasa al siguiente middleware
+* finalMiddle es una función que debería tener en este caso la función que renderizará´la página. Es también un middleware y no tendrá una llamada a next() ya que es el último
+
+Para poder utilizar Express.js primero hay que instalarlo en node:
+````
+npm install Express -g
+````
+De este modo, la instalación es global.
+
+El comienzo básico es:
+````
+var express = require("express");
+var app = express();
+var port = 8080;
+
+app.use(body-parser());
+app.use(cookieParser());
+
+app.get("/", function(req, res){
+    res.render("index");
+});
+
+app.listen(port, function(){
+   console.log("Server Started!");
+});
+
+````
+
+Donde:
+* express(): crea el objeto express que usaremos para todo
+* app.use(middleware): llama al middlewar para toda conexión
+* app.get(path, mid1, mid2, etc): Llama al mid1 para get requests a la ruta path. Se le pasan los argumentos de request, response y next. Si mid1 tiene una llamada a next(), se pasa al mid2, así contiunamente
+* Se pueden anidar varios middlewares
+* res.render(pagina): Llama a la página en el cliente
+* app.listen(port, callback): Incializa el servidaor escuchando al puerto designado
+
+Un ejemplo sencillo de como usaarlo:
+````
+// basicExample.js
+//Ejemplo básico del funcionamiento de express
+//Una vez iniciado el servidor, acceder a:
+//  localhost:8080/
+//  localhost:8080/heyy o cualquier otra cosa
+//Ver difenccia en la consola. En el primero se verán las
+//llamadas a log, indexMiddle y hello mientras que en el segundo
+//solo a log ya que no hay enrutamiento definido para /heyy
+
+//Express module for node
+var express = require("express");
+
+//Express object
+var app = express();
+
+//apiRouter funciona muy parecido a app solo que lo podemos
+//pasar como un middleware
+var apiRouter = express.Router();
+//Port to listen for the server
+var port = 8080;
+
+
+//Se llamará al middleware para todo request al puerto
+app.use(log);
+//Cuando se hace un get request a la página de inicio,
+//Se lanzan los middleware log y hello, definidos más abajo,
+//uno tras otro
+app.get("/", indexMiddle, hello);
+
+//Asignar apiRouter a toda llamada a la carpeta /api
+app.use("/api", apiRouter);
+
+//Call the middleware to all path to which apiRouter is assigned:
+// /api, /api/something/something 
+apiRouter.use(weAreTheApi);
+
+
+//Ejemplos de middleware
+function log(req, res, next){
+    //Lo que hará este middleware es que para cada conexión,
+    //Escribirá en nuestra consola algunos datos del cliente
+    //Como la fecha, el request method y la url a la que ha accedido
+    
+    console.log("Conexión hecha en: " + new Date());
+    console.log("Se ha accedido a la url " + req.url 
+                + " por medio de un metodo " + req.method);
+                
+    //Una vez acabado este middleware, pasamos al siguiente
+    //Para ello, llamamos a la función next:
+    
+    next();
+}
+
+function indexMiddle(req, res, next) {
+    //Llamado solo en el path ./
+    console.log("Connected to the index page");
+    //Pasamos a hello
+    next();
+}
+
+function hello(req, res, next){
+    //Enviá una página html al cliente 
+    //con el téxto de "Hello World"
+    
+    //Enviamos el header.
+        //Status: 200
+        //Conexión: text/html
+    res.writeHead(200, {"Conection-type": "text/html"});
+    
+    //Enviamos el texto y cerramos el stream de respuesta:
+    res.end("Hello World! :)");
+    
+    //Llamamos al siguiente middleware si es que hay
+    //En este caso, como es el último, es opcional ponerlo
+    next();
+}
+
+function weAreTheApi(req, res, next) {
+    console.log("We are in the Happy Api World");
+    res.send("What is this??");
+    //Starting the rendering! 
+    //Status 200! All ok :)
+    //Conection: html
+    res.writeHead(200, {"Conection-type": "text/html"});
+    //Path Called! This will be called on the apiRouter
+    //The path will be from the api folder!!
+    //Just a hello and the url to check the paradox
+    //req.url for:
+    //  /api -> /
+    //  /api/something -> /something
+    console.log(__dirname);
+
+    res.write("Hello to the Api. You are in the url " + req.url);
+    //Ending Conection!
+    res.end();
+
+    //Just in case. Not needed as it is the last middleware
+    next();
+}
+//Empezamos el server!
+app.listen(port, function(){
+   console.log("Server Started!");
+});
+
+````
+
+ 
