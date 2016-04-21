@@ -15,6 +15,10 @@ fs.open("text.txt", "r+", function(err, fd){
 	fs.read(fd, buf, 0, 254, null, function(err, bytesRead ){
 		if(err) console.error(err);
 		//Datos leidos. Archivo utf8. Transdormar raw a utf8
+		//Los datos están en el buffer
+		//Puede que haya parte del buffer que no ha sido ocupado(como por ejemplo cuando la long es menor que el buf.length)
+		//En dicho caso, los elementos adicionale contienen basura.
+		//BytesRead nos da el número de bytes leidos:
 		console.log(buf.slice(0, bytesRead).toString());
 		console.log("Archivo leido");
 	});
